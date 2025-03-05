@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.home.CurrencyFragment">
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/horizontal_start_guide_line"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.025" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/vertical_start_guide_line"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.08" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/vertical_end_guide_line"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.92" />
+
+    <androidx.appcompat.widget.AppCompatImageButton
+        android:id="@+id/btnCurrency"
+        style="@style/AppCompatImageButtonStyle"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_marginEnd="10dp"
+        android:background="@drawable/round_corner_bg"
+        android:src="@drawable/usaflag"
+        android:stateListAnimator="@xml/button_animation"
+        app:layout_constraintStart_toStartOf="@id/vertical_start_guide_line"
+        app:layout_constraintTop_toTopOf="@id/horizontal_start_guide_line" />
+
+    <EditText
+        android:id="@+id/edEnterAmount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="5dp"
+        style="@style/BaseTextStyle"
+        android:hint="@string/enter_amount"
+        app:layout_constraintBottom_toBottomOf="@id/btnCurrency"
+        app:layout_constraintStart_toEndOf="@id/btnCurrency"
+        app:layout_constraintTop_toTopOf="@id/btnCurrency" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvCurrency"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="15dp"
+        android:layout_marginBottom="15dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@id/vertical_end_guide_line"
+        app:layout_constraintStart_toStartOf="@id/vertical_start_guide_line"
+        app:layout_constraintTop_toBottomOf="@id/btnCurrency"
+        tools:itemCount="10"
+        tools:listitem="@layout/item_currency" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
