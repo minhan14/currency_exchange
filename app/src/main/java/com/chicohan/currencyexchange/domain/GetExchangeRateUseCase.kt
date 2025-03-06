@@ -9,9 +9,12 @@ import kotlin.coroutines.cancellation.CancellationException
 class GetExchangeRateUseCase @Inject constructor(
     private val repository: ExchangeRateRepository
 ) {
-    suspend operator fun invoke(forceRefresh: Boolean = false): Resource<List<ExchangeRateEntity>> {
+    suspend operator fun invoke(
+        forceRefresh: Boolean = false,
+        baseCurrency: String
+    ): Resource<List<ExchangeRateEntity>> {
         return try {
-            repository.getExchangeRates(forceRefresh)
+            repository.getExchangeRates(forceRefresh = forceRefresh, baseCurrency = baseCurrency)
         } catch (e: Throwable) {
             e.printStackTrace()
             Resource.Error(e.message.toString(), data = null)

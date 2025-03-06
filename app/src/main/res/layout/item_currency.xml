@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/cvRoot"
+    android:id="@+id/cardViewItem"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginTop="10dp"
     android:focusable="true"
-    app:cardCornerRadius="@dimen/card_corners"
-    app:cardBackgroundColor="@color/white"
+    app:cardCornerRadius="8dp"
+    android:layout_margin="5dp"
     app:layout_constraintEnd_toEndOf="parent"
     app:layout_constraintStart_toStartOf="parent">
 
@@ -19,7 +19,7 @@
         <ImageView
             android:id="@+id/ivCountryFlag"
             android:layout_width="@dimen/image_dimen"
-            android:layout_height="30dp"
+            android:layout_height="20dp"
             android:background="@drawable/round_corner_bg"
             android:clipToOutline="true"
             android:contentDescription="@string/this_is_country_image"

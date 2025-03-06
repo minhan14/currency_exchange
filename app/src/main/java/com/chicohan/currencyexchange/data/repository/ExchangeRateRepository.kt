@@ -5,6 +5,9 @@ import com.chicohan.currencyexchange.domain.model.Resource
 
 interface ExchangeRateRepository {
 
-    suspend fun getExchangeRates(forceRefresh: Boolean): Resource<List<ExchangeRateEntity>>
+    suspend fun getExchangeRates(
+        forceRefresh: Boolean,
+        baseCurrency: String
+    ): Resource<List<ExchangeRateEntity>>
 
 }

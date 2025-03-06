@@ -1,7 +1,12 @@
 package com.chicohan.currencyexchange.di
 
 import android.content.Context
+import android.content.SharedPreferences
 import androidx.room.Room
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.bumptech.glide.request.RequestOptions
+import com.chicohan.currencyexchange.R
 import com.chicohan.currencyexchange.data.api.CurrencyApi
 import com.chicohan.currencyexchange.data.db.dao.ExchangeRateDao
 import com.chicohan.currencyexchange.data.db.database.ExchangeRateDatabase
@@ -45,7 +50,32 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideExcRateRepository(dao: ExchangeRateDao, api: CurrencyApi): ExchangeRateRepository {
-        return ExchangeRateRepositoryImpl(api = api, currencyDao = dao)
+    fun provideExcRateRepository(
+        dao: ExchangeRateDao,
+        api: CurrencyApi,
+        @ApplicationContext context: Context
+    ): ExchangeRateRepository {
+        return ExchangeRateRepositoryImpl(
+            api = api,
+            currencyDao = dao,
+            context = context
+        )
     }
+
+    @Provides
+    @Singleton
+    fun provideSharedPreferences(@ApplicationContext context: Context): SharedPreferences {
+        return context.getSharedPreferences("currency_prefs", Context.MODE_PRIVATE)
+    }
+
+    @Singleton
+    @Provides
+    fun provideGlideInstance(
+        @ApplicationContext context: Context
+    ) = Glide.with(context).setDefaultRequestOptions(
+        RequestOptions()
+            .placeholder(R.drawable.ic_launcher_background)
+          //  .error(R.drawable.baseline_running_with_errors_24)
+            .diskCacheStrategy(DiskCacheStrategy.DATA)
+    )
 }

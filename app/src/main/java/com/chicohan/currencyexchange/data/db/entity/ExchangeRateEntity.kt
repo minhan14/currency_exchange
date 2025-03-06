@@ -7,5 +7,11 @@ import androidx.room.PrimaryKey
 data class ExchangeRateEntity(
     @PrimaryKey val currency: String,
     val rate: Double,
-    val timestamp: Long
-)
+    val timestamp: Long,
+    val countryName: String,
+    val flagUrl: String
+){
+    fun convertAmount(amount: Double): Double {
+        return amount * rate
+    }
+}

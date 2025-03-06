@@ -7,10 +7,11 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.bumptech.glide.RequestManager
 import com.chicohan.currencyexchange.data.db.entity.ExchangeRateEntity
 import com.chicohan.currencyexchange.databinding.ItemCurrencyBinding
 
-class MyListAdapter(private val onMoreClickCallback: ((item: ExchangeRateEntity) -> Unit)? = null) :
+class MyListAdapter(private val glide:RequestManager,private val onMoreClickCallback: ((item: ExchangeRateEntity) -> Unit)? = null) :
     ListAdapter<ExchangeRateEntity, MyListAdapter.MyListItemViewHolder>(
         ListDiffCallBack()
     ) {
@@ -41,6 +42,7 @@ class MyListAdapter(private val onMoreClickCallback: ((item: ExchangeRateEntity)
             }
             tvCurrencyCode.text = currencyItm.currency
             tvExchangeRate.text = currencyItm.rate.toString()
+            glide.load(currencyItm.flagUrl).into(ivCountryFlag)
 //            Glide.with(this.root.context).load(currencyItm.imageUri)
 //                .into(ivCountryFlag)
         }
