@@ -54,7 +54,7 @@ jobs:
           tag_name: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
           body: |
-            🎉 New release ${{ github.ref_name }} is out!
+            New app released ${{ github.ref_name }} 
             - Automatically generated release.
           draft: false
           prerelease: false
@@ -66,4 +66,4 @@ jobs:
         with:
           files: app/build/outputs/apk/debug/app-debug.apk
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PAT_GH }}
