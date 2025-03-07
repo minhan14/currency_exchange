@@ -38,19 +38,19 @@
         app:layout_constraintStart_toStartOf="@id/vertical_start_guide_line"
         app:layout_constraintTop_toTopOf="@id/horizontal_start_guide_line" />
 
-
     <ImageView
         android:id="@+id/btnCurrency"
-        style="@style/AppCompatImageButtonStyle"
         android:layout_width="@dimen/image_dimen"
         android:layout_height="20dp"
         android:layout_margin="10dp"
         android:background="@drawable/round_corner_bg"
-        android:scaleType="fitXY"
+        android:clipToOutline="true"
+        android:scaleType="centerCrop"
         android:src="@drawable/usaflag"
         android:stateListAnimator="@xml/button_animation"
+        app:layout_constraintBottom_toBottomOf="@id/edEnterAmount"
         app:layout_constraintStart_toStartOf="@id/vertical_start_guide_line"
-        app:layout_constraintTop_toBottomOf="@id/textViewHeader" />
+        app:layout_constraintTop_toTopOf="@id/edEnterAmount" />
 
     <ProgressBar
         android:id="@+id/progressBarCurrencyChange"
@@ -58,8 +58,9 @@
         android:layout_height="24dp"
         android:layout_margin="10dp"
         android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@id/edEnterAmount"
         app:layout_constraintStart_toStartOf="@id/vertical_start_guide_line"
-        app:layout_constraintTop_toBottomOf="@id/textViewHeader" />
+        app:layout_constraintTop_toTopOf="@id/edEnterAmount" />
 
     <EditText
         android:id="@+id/edEnterAmount"
@@ -70,10 +71,10 @@
         android:layout_marginTop="10dp"
         android:hint="@string/enter_amount"
         android:inputType="numberDecimal"
-        app:layout_constraintBottom_toBottomOf="@id/btnCurrency"
+
         app:layout_constraintEnd_toStartOf="@id/textViewCurrency"
         app:layout_constraintStart_toEndOf="@id/btnCurrency"
-        app:layout_constraintTop_toTopOf="@id/btnCurrency" />
+        app:layout_constraintTop_toBottomOf="@id/textViewHeader" />
 
     <TextView
         android:id="@+id/textViewCurrency"
@@ -128,6 +129,20 @@
         app:layout_constraintEnd_toEndOf="@id/vertical_end_guide_line"
         app:layout_constraintStart_toStartOf="@+id/vertical_start_guide_line"
         app:layout_constraintTop_toBottomOf="@+id/rvCurrency" />
+
+    <TextView
+        android:id="@+id/tvRefreshCountdown"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="15dp"
+        android:layout_marginTop="4dp"
+        android:textSize="12sp"
+        android:textStyle="italic"
+        app:layout_constraintBottom_toBottomOf="@id/btnAddCurrency"
+        app:layout_constraintEnd_toStartOf="@id/btnAddCurrency"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/btnAddCurrency"
+        tools:text="Refreshing in 25 mins" />
 
     <ProgressBar
         android:id="@+id/progressBar"

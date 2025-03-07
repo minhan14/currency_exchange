@@ -78,11 +78,11 @@ class DialogSupportedCurrencies(private val mode: CurrencyDialogMode) : DialogFr
 
     override fun onDestroyView() {
         super.onDestroyView()
+        binding.etSearch.setText("")
         currencyViewModel.clearSearchQuery()
     }
 
     private fun initViews() = with(binding) {
-        etSearch.setText(currencyViewModel.currencySearchQuery.value)
         when (mode) {
             CurrencyDialogMode.SELECT_CURRENCY -> {
                 "Select Base Currency".also { tvTitle.text = it }
@@ -96,6 +96,7 @@ class DialogSupportedCurrencies(private val mode: CurrencyDialogMode) : DialogFr
             layoutManager = LinearLayoutManager(requireContext())
             adapter = currencyAdapter
         }
+
         etSearch.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {
                 currencyViewModel.updateCurrencySearchQuery(s?.toString() ?: "")

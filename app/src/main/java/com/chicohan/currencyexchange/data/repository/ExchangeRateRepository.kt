@@ -15,4 +15,8 @@ interface ExchangeRateRepository {
 
     suspend fun toggleFavoriteStatus(currencyCode: String, isFavorite: Boolean): Resource<Boolean>
 
+    suspend fun initializeDefaultFavorites(): Resource<Boolean>
+
+    suspend fun isFirstRun(): Boolean
+
 }

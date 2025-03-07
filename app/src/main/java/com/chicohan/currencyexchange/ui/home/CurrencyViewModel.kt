@@ -1,17 +1,15 @@
 package com.chicohan.currencyexchange.ui.home
 
 import android.util.Log
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.chicohan.currencyexchange.data.db.entity.ExchangeRateEntity
 import com.chicohan.currencyexchange.data.db.entity.SupportedCurrencies
 import com.chicohan.currencyexchange.domain.Event
-import com.chicohan.currencyexchange.domain.GetExchangeRateUseCase
-import com.chicohan.currencyexchange.domain.model.Resource
-import com.chicohan.currencyexchange.helper.PreferencesHelper
 import com.chicohan.currencyexchange.domain.UseCases
+import com.chicohan.currencyexchange.domain.model.Resource
 import com.chicohan.currencyexchange.domain.model.UIState
+import com.chicohan.currencyexchange.helper.PreferencesHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,11 +20,8 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -42,25 +37,15 @@ class CurrencyViewModel @Inject constructor(
     -convertedRates is the calculated rates
     -error message should be collect once
      */
-
-    // State for raw exchange rates
     private val _ratesState =
         MutableStateFlow<Resource<List<ExchangeRateEntity>>>(Resource.Loading(null))
     private val ratesState: StateFlow<Resource<List<ExchangeRateEntity>>> = _ratesState
 
-    // Base currency code  i.e user selected county from the dialog
-//    private val _baseCurrency = MutableStateFlow(preferencesHelper.getBaseCurrency() ?: "USD")
-//    private val baseCurrency: StateFlow<String> = _baseCurrency.asStateFlow()
-
-    // State for supported currencies
     private val _supportedCurrencies = MutableStateFlow<List<SupportedCurrencies>>(emptyList())
     val supportedCurrencies: StateFlow<List<SupportedCurrencies>> =
         _supportedCurrencies.asStateFlow()
 
-    // Search query for currency filtering
-    var currencySearchQuery = MutableStateFlow("")
-        private set
-//    val currencySearchQuery: StateFlow<String> = _currencySearchQuery.asStateFlow()
+    private var currencySearchQuery = MutableStateFlow("")
 
     @OptIn(FlowPreview::class)
     val filteredCurrencies: StateFlow<List<SupportedCurrencies>> = combine(
@@ -165,9 +150,27 @@ class CurrencyViewModel @Inject constructor(
         }.stateIn(viewModelScope, SharingStarted.Eagerly, CurrencyListUiState())
 
     init {
+        /*
+        Check if this is the first run
+        for one time event , initialize default faves
+         */
+
+        viewModelScope.launch {
+            if (preferencesHelper.isFirstRun()) {
+                initializeDefaultFavorites()
+                preferencesHelper.setFirstRunCompleted()
+            }
+        }
+
         loadSupportedCurrencies()
         fetchExchangeRates(false)
     }
+
+    private fun initializeDefaultFavorites() =
+        viewModelScope.launch {
+            useCases.initializeDefaultFavoritesUseCase()
+        }
+
 
     fun updateAmount(newAmount: Double) {
         if (_amount.value == newAmount) return
@@ -267,5 +270,4 @@ data class CurrencyListUiState(
     val amount: Double = 1.0,
     val baseCurrency: String = "USD"
 )
-
 

@@ -22,7 +22,7 @@ import com.chicohan.currencyexchange.helper.createGenericAlertDialog
 import com.chicohan.currencyexchange.helper.invisible
 import com.chicohan.currencyexchange.helper.toast
 import com.chicohan.currencyexchange.helper.visible
-import com.chicohan.currencyexchange.ui.adaptar.MyListAdapter
+import com.chicohan.currencyexchange.ui.adaptar.CurrencyRatesAdapter
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -44,8 +44,8 @@ class CurrencyFragment : Fragment(R.layout.fragment_currency) {
     @Inject
     lateinit var glide: RequestManager
 
-    private val myListAdapter by lazy {
-        MyListAdapter(glide) { item: ExchangeRateEntity ->
+    private val currencyRatesAdapter by lazy {
+        CurrencyRatesAdapter(glide) { item: ExchangeRateEntity ->
             print(item)
             handleNavigationToDetail(item)
         }
@@ -71,16 +71,28 @@ class CurrencyFragment : Fragment(R.layout.fragment_currency) {
     }
 
     private fun initViews() = with(binding) {
+        /**
+        need to set the initial saved amount otherwise it will not load the last save amount
+        -this happen when reactive calculation of rates(amount) cannot be directly set into the text, it will reverse typing of text with the text change listener
+        -(currentText.toDoubleOrNull() != amount) which lead to collect the last save amount and set the last float value when all the text is cleared where u can see 6.0 pops up
+        -txtAmount empty
+        -collected amount 6.0
+        - if (currentText.isNotEmpty() && currentText.toDoubleOrNull() != amount) which seems right but not set the last save amount
+        -so i decided to set the  edEnterAmount.setText(currencyViewModel.amount.value.toString() in view initialization
+         */
+        edEnterAmount.setText(currencyViewModel.amount.value.toString())
+
         rvCurrency.apply {
             layoutManager = LinearLayoutManager(requireContext())
             isNestedScrollingEnabled = false
             itemAnimator = null
-            adapter = myListAdapter
+            adapter = currencyRatesAdapter
         }
 
         edEnterAmount.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {
-                val amount = s?.toString()?.toDoubleOrNull() ?: 1.0
+                if (s.isNullOrEmpty()) return
+                val amount = s.toString().toDoubleOrNull() ?: 1.0
                 currencyViewModel.updateAmount(amount)
             }
 
@@ -115,7 +127,11 @@ class CurrencyFragment : Fragment(R.layout.fragment_currency) {
         with(binding) {
             progressBar.visible(loading)
             txtEmptyView.visible(convertedRates.isEmpty() && !loading)
-            if (edEnterAmount.text.toString().toDoubleOrNull() != amount) {
+            val currentText = edEnterAmount.text.toString()
+            Log.d("currentAmount", "txtAmount $currentText")
+            Log.d("currentAmount", "collected amount $amount")
+
+            if (currentText.isNotEmpty() && currentText.toDoubleOrNull() != amount) {
                 edEnterAmount.setText(amount.toString())
             }
             // reserving the one time event
@@ -135,7 +151,7 @@ class CurrencyFragment : Fragment(R.layout.fragment_currency) {
                 }
                 Log.d("Currency Fragment", message)
             }
-            myListAdapter.submitList(convertedRates)
+            currencyRatesAdapter.submitList(convertedRates)
         }
     }
 

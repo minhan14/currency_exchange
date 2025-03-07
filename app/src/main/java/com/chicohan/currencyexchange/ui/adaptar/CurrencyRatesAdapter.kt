@@ -2,19 +2,16 @@ package com.chicohan.currencyexchange.ui.adaptar
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.bumptech.glide.Glide
 import com.bumptech.glide.RequestManager
 import com.chicohan.currencyexchange.data.db.entity.ExchangeRateEntity
 import com.chicohan.currencyexchange.databinding.ItemCurrencyBinding
-import okhttp3.internal.format
 import java.text.DecimalFormat
 
-class MyListAdapter(private val glide:RequestManager,private val onMoreClickCallback: ((item: ExchangeRateEntity) -> Unit)? = null) :
-    ListAdapter<ExchangeRateEntity, MyListAdapter.MyListItemViewHolder>(
+class CurrencyRatesAdapter(private val glide:RequestManager, private val onMoreClickCallback: ((item: ExchangeRateEntity) -> Unit)? = null) :
+    ListAdapter<ExchangeRateEntity, CurrencyRatesAdapter.MyListItemViewHolder>(
         ListDiffCallBack()
     ) {
     private val formatter = DecimalFormat("#,###.######")

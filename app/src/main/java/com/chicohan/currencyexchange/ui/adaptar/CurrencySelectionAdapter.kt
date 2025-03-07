@@ -16,6 +16,17 @@ class CurrencySelectionAdapter(
 ) : ListAdapter<SupportedCurrencies, CurrencySelectionAdapter.CurrencyViewHolder>(
     CurrencyDiffCallback()
 ) {
+    class CurrencyDiffCallback : DiffUtil.ItemCallback<SupportedCurrencies>() {
+        override fun areItemsTheSame(
+            oldItem: SupportedCurrencies,
+            newItem: SupportedCurrencies
+        ): Boolean = oldItem.currencyCode == newItem.currencyCode
+
+        override fun areContentsTheSame(
+            oldItem: SupportedCurrencies,
+            newItem: SupportedCurrencies
+        ): Boolean = oldItem == newItem
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CurrencyViewHolder {
         val binding = ItemCurrencySelectionBinding.inflate(
@@ -37,21 +48,10 @@ class CurrencySelectionAdapter(
             glide.load(currency.flag).into(ivFlag)
         }
     }
+
     inner class CurrencyViewHolder(
         val binding: ItemCurrencySelectionBinding
     ) : RecyclerView.ViewHolder(binding.root)
 
-    class CurrencyDiffCallback : DiffUtil.ItemCallback<SupportedCurrencies>() {
-        override fun areItemsTheSame(
-            oldItem: SupportedCurrencies,
-            newItem: SupportedCurrencies
-        ): Boolean = oldItem.currencyCode == newItem.currencyCode
-
-        override fun areContentsTheSame(
-            oldItem: SupportedCurrencies,
-            newItem: SupportedCurrencies
-        ): Boolean = oldItem == newItem
-
-    }
 
 }

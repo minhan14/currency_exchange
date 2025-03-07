@@ -20,4 +20,12 @@ class PreferencesHelper @Inject constructor(private val sharedPreferences: Share
     fun getBaseCurrency(): String? {
         return sharedPreferences.getString("base_currency", "USD")
     }
+
+    fun isFirstRun(): Boolean {
+        return sharedPreferences.getBoolean("is_first_run", true)
+    }
+
+    fun setFirstRunCompleted() {
+        sharedPreferences.edit().putBoolean("is_first_run", false).apply()
+    }
 }
