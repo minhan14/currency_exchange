@@ -38,7 +38,7 @@ class CurrencyFragment : Fragment(R.layout.fragment_currency) {
 
     lateinit var binding: FragmentCurrencyBinding
         private set
-    private var currentCurrency:String? = null
+
     private val currencyViewModel by activityViewModels<CurrencyViewModel>()
 
     @Inject
@@ -103,7 +103,6 @@ class CurrencyFragment : Fragment(R.layout.fragment_currency) {
             is UIState.Idle -> Unit
             is UIState.Loading -> Unit //already handled
             is UIState.Success -> {
-                currentCurrency = state.result.currencyCode
                 glide.load(state.result.flag).into(btnCurrency)
                 textViewCurrency.text = state.result.currencyCode
             }

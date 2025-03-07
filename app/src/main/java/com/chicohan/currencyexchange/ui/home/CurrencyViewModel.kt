@@ -101,7 +101,7 @@ class CurrencyViewModel @Inject constructor(
         )
 
     val selectedSupportedCurrency: StateFlow<UIState<SupportedCurrencies>> =
-        //should filter not empty for supported country to be loaded
+        //should filter for supported country to be loaded
         combine(
             _supportedCurrencies.filter { it.isNotEmpty() },
             _baseCurrencyState
@@ -131,7 +131,7 @@ class CurrencyViewModel @Inject constructor(
     // Reactive calculation of converted rates
     @OptIn(FlowPreview::class)
     private val convertedRates: StateFlow<List<ExchangeRateEntity>> =
-        combine(ratesState, amount.debounce(300).distinctUntilChanged()) { resource, amount ->
+        combine(ratesState, amount.debounce(200).distinctUntilChanged()) { resource, amount ->
             if (resource is Resource.Success) {
                 useCases.calculateExchangeRateUseCase(resource.data ?: emptyList(), amount)
             } else {
@@ -207,19 +207,18 @@ class CurrencyViewModel @Inject constructor(
             // When base currency change we need to force refresh from api which will return updated exchanged currencies
             /**
              * add ui state control to baseCurrencyState
-             * to prevent changing before api call succeed cause reactive stream (flow)
-             * updated immediately before the API call to fetch new exchange rates completes
+             * to prevent changing before api call succeed cause reactive stream (flow) updated immediately before the API call to fetch new exchange rates completes
+             * only update the _base currency if the API call succeeds
+             * if there exist err don't update the _base currency
              */
             when (val result = useCases.rateUseCase(true, currencyCode)) {
                 is Resource.Success -> {
-                    // Only update the _basecurrency if the API call succeeds
                     _baseCurrencyState.value = UIState.Success(currencyCode)
                     preferencesHelper.saveBaseCurrency(currencyCode)
                     _ratesState.value = result
                 }
 
                 is Resource.Error -> {
-                    // If there exist err don't update the _basecurrency
                     _ratesState.value = result
                     _baseCurrencyState.value = UIState.Error(result.message)
                 }

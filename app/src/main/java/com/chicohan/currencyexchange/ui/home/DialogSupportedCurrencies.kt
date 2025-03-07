@@ -111,7 +111,6 @@ class DialogSupportedCurrencies(private val mode: CurrencyDialogMode) : DialogFr
             CurrencyDialogMode.SELECT_CURRENCY -> {
                 currencyViewModel.updateBaseCurrency(currency.currencyCode)
             }
-
             CurrencyDialogMode.ADD_CURRENCY -> {
                 currencyViewModel.toggleFavorite(currency.currencyCode, true)
             }
