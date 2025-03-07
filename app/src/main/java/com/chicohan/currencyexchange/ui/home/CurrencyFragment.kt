@@ -4,35 +4,41 @@ import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
-import android.view.KeyEvent
 import androidx.fragment.app.Fragment
 import android.view.View
-import android.view.inputmethod.EditorInfo
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.RequestManager
 import com.chicohan.currencyexchange.R
 import com.chicohan.currencyexchange.data.db.entity.ExchangeRateEntity
+import com.chicohan.currencyexchange.data.db.entity.SupportedCurrencies
+import com.chicohan.currencyexchange.data.model.DetailFragmentModel
 import com.chicohan.currencyexchange.databinding.FragmentCurrencyBinding
+import com.chicohan.currencyexchange.domain.model.UIState
 import com.chicohan.currencyexchange.helper.collectFlowWithLifeCycleAtStateStart
 import com.chicohan.currencyexchange.helper.createGenericAlertDialog
+import com.chicohan.currencyexchange.helper.invisible
 import com.chicohan.currencyexchange.helper.toast
 import com.chicohan.currencyexchange.helper.visible
 import com.chicohan.currencyexchange.ui.adaptar.MyListAdapter
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 
 @AndroidEntryPoint
 class CurrencyFragment : Fragment(R.layout.fragment_currency) {
 
+    companion object {
+        private const val DIALOG_CURRENCY_TAG = "dialogCurrency"
+        private const val DIALOG_ADD_CURRENCY_TAG = "dialogAddCurrency"
+    }
+
     lateinit var binding: FragmentCurrencyBinding
         private set
-
+    private var currentCurrency:String? = null
     private val currencyViewModel by activityViewModels<CurrencyViewModel>()
 
     @Inject
@@ -41,7 +47,15 @@ class CurrencyFragment : Fragment(R.layout.fragment_currency) {
     private val myListAdapter by lazy {
         MyListAdapter(glide) { item: ExchangeRateEntity ->
             print(item)
+            handleNavigationToDetail(item)
         }
+    }
+
+    private val dialogSupportedCurrencies by lazy {
+        DialogSupportedCurrencies(mode = CurrencyDialogMode.SELECT_CURRENCY)
+    }
+    private val dialogAddCurrencies by lazy {
+        DialogSupportedCurrencies(mode = CurrencyDialogMode.ADD_CURRENCY)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -51,15 +65,20 @@ class CurrencyFragment : Fragment(R.layout.fragment_currency) {
         collectFlowWithLifeCycleAtStateStart(currencyViewModel.uiState) {
             handleCurrencyListUiState(it)
         }
+        collectFlowWithLifeCycleAtStateStart(currencyViewModel.selectedSupportedCurrency) {
+            handleSelectedCurrencyState(it)
+        }
     }
 
     private fun initViews() = with(binding) {
         rvCurrency.apply {
             layoutManager = LinearLayoutManager(requireContext())
+            isNestedScrollingEnabled = false
+            itemAnimator = null
             adapter = myListAdapter
         }
 
-        binding.edEnterAmount.addTextChangedListener(object : TextWatcher {
+        edEnterAmount.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {
                 val amount = s?.toString()?.toDoubleOrNull() ?: 1.0
                 currencyViewModel.updateAmount(amount)
@@ -68,12 +87,35 @@ class CurrencyFragment : Fragment(R.layout.fragment_currency) {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
         })
+        btnCurrency.setOnClickListener {
+            showOrReplaceDialog()
+        }
+        btnAddCurrency.setOnClickListener {
+            showOrReplaceAddCurrencyDialog()
+        }
+
+    }
+
+    private fun handleSelectedCurrencyState(state: UIState<SupportedCurrencies>) = with(binding) {
+        progressBarCurrencyChange.visible(state is UIState.Loading)
+        btnCurrency.invisible(state is UIState.Loading)
+        when (state) {
+            is UIState.Idle -> Unit
+            is UIState.Loading -> Unit //already handled
+            is UIState.Success -> {
+                currentCurrency = state.result.currencyCode
+                glide.load(state.result.flag).into(btnCurrency)
+                textViewCurrency.text = state.result.currencyCode
+            }
+
+            is UIState.Error -> requireContext().toast(state.errorMessage)
+        }
     }
 
     private fun handleCurrencyListUiState(state: CurrencyListUiState) = with(state) {
         with(binding) {
             progressBar.visible(loading)
-            println(loading)
+            txtEmptyView.visible(convertedRates.isEmpty() && !loading)
             if (edEnterAmount.text.toString().toDoubleOrNull() != amount) {
                 edEnterAmount.setText(amount.toString())
             }
@@ -96,61 +138,40 @@ class CurrencyFragment : Fragment(R.layout.fragment_currency) {
             }
             myListAdapter.submitList(convertedRates)
         }
-//        with(binding) {
-//            loading.getContentIfNotHandled()?.let {
-//                Log.d("Currency Fragment", "loading")
-//            }
-//            errorMessage.getContentIfNotHandled()?.let {
-//                requireContext().toast(it)
-//                Log.d("Currency Fragment", it)
-//            }
-//            isSuccess.getContentIfNotHandled()?.let { cList ->
-//                Log.d("Currency Fragment", cList.toString())
-//                myListAdapter.submitList(cList)
-//            }
-//        }
+    }
+
+    private fun showOrReplaceDialog() {
+        val oldDialog = childFragmentManager.findFragmentByTag(DIALOG_CURRENCY_TAG)
+        if (oldDialog == null) {
+            dialogSupportedCurrencies.show(childFragmentManager, DIALOG_CURRENCY_TAG)
+        } else {
+            childFragmentManager.beginTransaction().remove(oldDialog).commit()
+        }
+    }
+
+    private fun showOrReplaceAddCurrencyDialog() {
+        val oldDialog = childFragmentManager.findFragmentByTag(DIALOG_ADD_CURRENCY_TAG)
+        if (oldDialog == null) {
+            dialogAddCurrencies.show(childFragmentManager, DIALOG_ADD_CURRENCY_TAG)
+        } else {
+            childFragmentManager.beginTransaction().remove(oldDialog).commit()
+        }
+    }
+
+    private fun handleNavigationToDetail(item: ExchangeRateEntity) {
+        val currencyState = currencyViewModel.selectedSupportedCurrency.value
+        if (currencyState is UIState.Success) {
+            val detailModel = DetailFragmentModel(
+                currentCurrency = currencyState.result.currencyName,
+                currentCurrencyAmount = currencyViewModel.amount.value,
+                calculatedCurrency = item.currencyName,
+                calculatedCurrencyAmount = item.rate
+            )
+            val action =
+                CurrencyFragmentDirections.actionCurrencyFragmentToDetailFragment(detailModel)
+            findNavController().navigate(action)
+        } else {
+            requireContext().toast("Please wait")
+        }
     }
 }
-
-// initSearch()
-// Collect amount to update EditText
-//        collectFlowWithLifeCycleAtStateStart(currencyViewModel.amount) { amount ->
-//            Log.d("CurrencyFragment", amount.toString())
-//            if (binding.edEnterAmount.text.toString().toDoubleOrNull() != amount) {
-//                binding.edEnterAmount.setText(amount.toString())
-//            }
-//        }
-
-//        collectFlowWithLifeCycleAtStateStart(currencyViewModel.convertedRates) {
-//            withContext(Dispatchers.IO){
-//                myListAdapter.submitList(it)
-//            }
-//        }
-//        collectFlowWithLifeCycleAtStateStart(currencyViewModel.currencyListState) {
-//            handleCurrencyListUiState(it)
-//        }
-//        collectFlowWithLifeCycleAtStateStart(currencyViewModel.state) {
-//            when (it) {
-//                is Resource.Error -> requireContext().toast(it.message)
-//                is Resource.Loading -> print("loading")
-//                is Resource.Success -> Unit
-//            }
-//        }
-//    private fun initSearch() = with(binding.edEnterAmount) {
-//        setOnEditorActionListener { _, actionId, _ ->
-//            if (actionId == EditorInfo.IME_ACTION_GO) {
-//                updatedAmountFromInput()
-//                true
-//            } else {
-//                false
-//            }
-//        }
-//        setOnKeyListener { _, keyCode, event ->
-//            if (event.action == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_ENTER) {
-//                updatedAmountFromInput()
-//                true
-//            } else {
-//                false
-//            }
-//        }
-//    }

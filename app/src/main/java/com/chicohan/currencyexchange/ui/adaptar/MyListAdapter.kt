@@ -43,8 +43,6 @@ class MyListAdapter(private val glide:RequestManager,private val onMoreClickCall
             tvCurrencyCode.text = currencyItm.currency
             tvExchangeRate.text = currencyItm.rate.toString()
             glide.load(currencyItm.flagUrl).into(ivCountryFlag)
-//            Glide.with(this.root.context).load(currencyItm.imageUri)
-//                .into(ivCountryFlag)
         }
     }
 

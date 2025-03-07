@@ -12,4 +12,12 @@ class PreferencesHelper @Inject constructor(private val sharedPreferences: Share
     fun getSavedAmount(): Double {
         return sharedPreferences.getFloat("saved_amount", 1.0f).toDouble()
     }
+
+    fun saveBaseCurrency(currencyCode: String) {
+        sharedPreferences.edit().putString("base_currency", currencyCode).apply()
+    }
+
+    fun getBaseCurrency(): String? {
+        return sharedPreferences.getString("base_currency", "USD")
+    }
 }

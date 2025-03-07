@@ -9,6 +9,20 @@
         android:id="@+id/currencyFragment"
         android:name="com.chicohan.currencyexchange.ui.home.CurrencyFragment"
         android:label="fragment_currency"
-        tools:layout="@layout/fragment_currency" />
+        tools:layout="@layout/fragment_currency" >
+        <action
+            android:id="@+id/action_currencyFragment_to_detailFragment"
+            app:destination="@id/detailFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/detailFragment"
+        android:name="com.chicohan.currencyexchange.ui.home.DetailFragment"
+        android:label="fragment_detail"
+        tools:layout="@layout/fragment_detail" >
+        <argument
+            android:name="detailModel"
+            app:argType="com.chicohan.currencyexchange.data.model.DetailFragmentModel"
+            app:nullable="true" />
+    </fragment>
 
 </navigation>

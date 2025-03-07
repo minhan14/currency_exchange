@@ -8,8 +8,9 @@ data class ExchangeRateEntity(
     @PrimaryKey val currency: String,
     val rate: Double,
     val timestamp: Long,
-    val countryName: String,
-    val flagUrl: String
+    val currencyName: String,
+    val flagUrl: String,
+    val isFavourite:Boolean = false
 ){
     fun convertAmount(amount: Double): Double {
         return amount * rate

@@ -4,5 +4,7 @@ import javax.inject.Inject
 
 data class UseCases @Inject constructor(
     val rateUseCase: GetExchangeRateUseCase,
-    val calculateExchangeRateUseCase: CalculateExchangeRateUseCase
+    val calculateExchangeRateUseCase: CalculateExchangeRateUseCase,
+    val getSupportedCurrenciesUseCase: GetSupportedCurrenciesUseCase,
+    val getToggleFavoriteUseCase: ToggleFavoriteUseCase
 )

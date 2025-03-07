@@ -22,6 +22,10 @@ fun View.visible(isVisible: Boolean) {
     visibility = if (isVisible) View.VISIBLE else View.GONE
 }
 
+fun View.invisible(invisible: Boolean) {
+    visibility = if (invisible) View.INVISIBLE else View.VISIBLE
+}
+
 fun View.hide() {
     this.visibility = View.INVISIBLE
 }
@@ -83,7 +87,7 @@ fun <T> Fragment.collectFlowWithLifeCycleAtStateResume(
     }
 }
 
-fun loadCurrencyMappings(context: Context): List<CurrencyInfo> {
+fun loadCurrencyMappings(context: Context): List<CurrencyInfo>? {
     val jsonString =
         context.assets.open("currencies-with-flags.json").bufferedReader().use { it.readText() }
     val listType = object : TypeToken<List<CurrencyInfo>>() {}.type

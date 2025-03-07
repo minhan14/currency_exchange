@@ -1,5 +1,4 @@
-package com.chicohan.samplelistapp.domain.model
-
+package com.chicohan.currencyexchange.domain.model
 
 sealed class UIState<out T> {
     data object Idle : UIState<Nothing>()

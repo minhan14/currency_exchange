@@ -10,12 +10,12 @@ plugins {
 
 android {
     namespace = "com.chicohan.currencyexchange"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.chicohan.currencyexchange"
         minSdk = 26
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
@@ -49,7 +49,7 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
-//    implementation(libs.androidx.activity)
+    implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -69,5 +69,6 @@ dependencies {
     implementation(libs.lottie)
     implementation(libs.retrofit)
     implementation(libs.gsonConverter)
-
+    debugImplementation(libs.chucker.debug)
+    releaseImplementation(libs.chucker.release)
 }

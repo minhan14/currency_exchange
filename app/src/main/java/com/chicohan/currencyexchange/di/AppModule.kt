@@ -13,11 +13,16 @@ import com.chicohan.currencyexchange.data.db.database.ExchangeRateDatabase
 import com.chicohan.currencyexchange.data.repository.ExchangeRateRepository
 import com.chicohan.currencyexchange.data.repository.ExchangeRateRepositoryImpl
 import com.chicohan.currencyexchange.helper.Constants.BASE_URL
+import com.chuckerteam.chucker.api.ChuckerCollector
+import com.chuckerteam.chucker.api.ChuckerInterceptor
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Singleton
@@ -25,12 +30,35 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
+
     @Provides
     @Singleton
-    fun provideRetrofit(): Retrofit = Retrofit.Builder()
+    fun provideChuckerInterceptor(@ApplicationContext context: Context): ChuckerInterceptor {
+        return ChuckerInterceptor.Builder(context)
+            .collector(ChuckerCollector(context))
+            .maxContentLength(250000L)
+            .redactHeaders(emptySet())
+            .alwaysReadResponseBody(false)
+            .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideOkHttpClient(chuckerInterceptor: ChuckerInterceptor): OkHttpClient {
+        return OkHttpClient.Builder()
+            .addInterceptor(chuckerInterceptor)
+            .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit = Retrofit.Builder()
         .baseUrl(BASE_URL)
+        .client(okHttpClient)
         .addConverterFactory(GsonConverterFactory.create())
         .build()
+
+
 
     @Provides
     @Singleton
@@ -75,7 +103,12 @@ object AppModule {
     ) = Glide.with(context).setDefaultRequestOptions(
         RequestOptions()
             .placeholder(R.drawable.ic_launcher_background)
-          //  .error(R.drawable.baseline_running_with_errors_24)
+            //  .error(R.drawable.baseline_running_with_errors_24)
             .diskCacheStrategy(DiskCacheStrategy.DATA)
     )
+
+    @Provides
+    fun provideDefaultDispatcher(): CoroutineDispatcher = Dispatchers.Default
+
+
 }

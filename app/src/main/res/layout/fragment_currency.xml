@@ -11,7 +11,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        app:layout_constraintGuide_percent="0.025" />
+        app:layout_constraintGuide_percent="0.05" />
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/vertical_start_guide_line"
@@ -31,37 +31,73 @@
         android:id="@+id/textViewHeader"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
         android:fontFamily="@font/poppins_semibold"
         android:text="@string/currency_exchange"
         android:textSize="23sp"
         app:layout_constraintEnd_toEndOf="@id/vertical_end_guide_line"
         app:layout_constraintStart_toStartOf="@id/vertical_start_guide_line"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="@id/horizontal_start_guide_line" />
 
-    <androidx.appcompat.widget.AppCompatImageButton
+
+    <ImageView
         android:id="@+id/btnCurrency"
         style="@style/AppCompatImageButtonStyle"
-        android:layout_width="30dp"
-        android:layout_height="30dp"
+        android:layout_width="@dimen/image_dimen"
+        android:layout_height="20dp"
         android:layout_margin="10dp"
         android:background="@drawable/round_corner_bg"
+        android:scaleType="fitXY"
         android:src="@drawable/usaflag"
         android:stateListAnimator="@xml/button_animation"
+        app:layout_constraintStart_toStartOf="@id/vertical_start_guide_line"
+        app:layout_constraintTop_toBottomOf="@id/textViewHeader" />
+
+    <ProgressBar
+        android:id="@+id/progressBarCurrencyChange"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_margin="10dp"
+        android:visibility="gone"
         app:layout_constraintStart_toStartOf="@id/vertical_start_guide_line"
         app:layout_constraintTop_toBottomOf="@id/textViewHeader" />
 
     <EditText
         android:id="@+id/edEnterAmount"
         style="@style/BaseTextStyle"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="5dp"
+        android:layout_marginTop="10dp"
         android:hint="@string/enter_amount"
         android:inputType="numberDecimal"
         app:layout_constraintBottom_toBottomOf="@id/btnCurrency"
+        app:layout_constraintEnd_toStartOf="@id/textViewCurrency"
         app:layout_constraintStart_toEndOf="@id/btnCurrency"
         app:layout_constraintTop_toTopOf="@id/btnCurrency" />
+
+    <TextView
+        android:id="@+id/textViewCurrency"
+        style="@style/BaseTextStyle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="@string/loading"
+        app:layout_constraintBottom_toBottomOf="@id/edEnterAmount"
+        app:layout_constraintEnd_toEndOf="@id/vertical_end_guide_line"
+        app:layout_constraintStart_toEndOf="@id/edEnterAmount"
+        app:layout_constraintTop_toTopOf="@id/edEnterAmount" />
+
+    <TextView
+        android:id="@+id/txtEmptyView"
+        style="@style/BaseTextStyle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="@string/please_add_select_currency"
+        android:textAlignment="center"
+        android:textSize="18sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@id/vertical_end_guide_line"
+        app:layout_constraintStart_toEndOf="@id/vertical_start_guide_line"
+        app:layout_constraintTop_toTopOf="@id/edEnterAmount" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvCurrency"
@@ -69,12 +105,29 @@
         android:layout_height="0dp"
         android:layout_marginTop="15dp"
         android:layout_marginBottom="15dp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/btnAddCurrency"
         app:layout_constraintEnd_toEndOf="@id/vertical_end_guide_line"
         app:layout_constraintStart_toStartOf="@id/vertical_start_guide_line"
-        app:layout_constraintTop_toBottomOf="@id/btnCurrency"
-        tools:itemCount="10"
+        app:layout_constraintTop_toBottomOf="@id/edEnterAmount"
+        tools:itemCount="5"
         tools:listitem="@layout/item_currency" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btnAddCurrency"
+        style="@style/AppCompatImageButtonStyle"
+        android:layout_margin="15dp"
+        android:background="@drawable/round_corner_background"
+        android:drawableStart="@drawable/baseline_add_box_24"
+        android:drawablePadding="10dp"
+        android:drawableTint="#2979FF"
+        android:fontFamily="@font/poppins_semibold"
+        android:padding="8dp"
+        android:text="Add Currency"
+        android:textColor="#2979FF"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@id/vertical_end_guide_line"
+        app:layout_constraintStart_toStartOf="@+id/vertical_start_guide_line"
+        app:layout_constraintTop_toBottomOf="@+id/rvCurrency" />
 
     <ProgressBar
         android:id="@+id/progressBar"
@@ -82,8 +135,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
