@@ -59,7 +59,7 @@ jobs:
           draft: false
           prerelease: false
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PAT_GH }}
 
       - name: Upload APK to GitHub Release
         uses: softprops/action-gh-release@v2
