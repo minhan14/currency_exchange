@@ -17,6 +17,4 @@ interface ExchangeRateRepository {
 
     suspend fun initializeDefaultFavorites(): Resource<Boolean>
 
-    suspend fun isFirstRun(): Boolean
-
 }

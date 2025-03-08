@@ -8,6 +8,7 @@ import com.chicohan.currencyexchange.data.db.entity.ExchangeRateEntity
 import com.chicohan.currencyexchange.data.db.entity.FavoriteCurrency
 import com.chicohan.currencyexchange.data.db.entity.SupportedCurrencies
 import com.chicohan.currencyexchange.data.model.CurrencyInfo
+import com.chicohan.currencyexchange.data.network.SafeApiCall
 import com.chicohan.currencyexchange.domain.model.Resource
 import com.chicohan.currencyexchange.helper.Constants.API_KEY
 import com.chicohan.currencyexchange.helper.PreferencesHelper
@@ -19,7 +20,7 @@ class ExchangeRateRepositoryImpl @Inject constructor(
     private val currencyDao: ExchangeRateDao,
     private val context: Context,
     private val preferencesHelper: PreferencesHelper
-) : ExchangeRateRepository {
+) : ExchangeRateRepository, SafeApiCall {
 
     private val currencyMapping: Map<String, CurrencyInfo>? by lazy {
         loadCurrencyMappings(context)?.associateBy { it.code }
@@ -29,114 +30,89 @@ class ExchangeRateRepositoryImpl @Inject constructor(
     override suspend fun getExchangeRates(
         forceRefresh: Boolean,
         baseCurrency: String
-    ): Resource<List<ExchangeRateEntity>> {
-        return try {
-            // Get favorite currencies first
-            val favoriteCurrencies = currencyDao.getFavoriteCurrencies().map { it.currencyCode }
+    ): Resource<List<ExchangeRateEntity>> = safeApiCall {
+        val favoriteCurrencies = currencyDao.getFavoriteCurrencies().map { it.currencyCode }
 
-            val cacheRates = currencyDao.getCurrencyRates()
-            val shouldRefresh =
-                forceRefresh || cacheRates.isEmpty() || (System.currentTimeMillis() - cacheRates.first().timestamp > 24 * 60 * 60 * 1000) // for quota and testing set 24 hour //only refresh when it is over 30 mins
+        val cacheRates = currencyDao.getCurrencyRates()
+        val shouldRefresh =
+            forceRefresh || cacheRates.isEmpty() || (System.currentTimeMillis() - cacheRates.first().timestamp > 30 * 60 * 1000) // for quota and testing set 24 hour //only refresh when it is over 30 mins
 
-            Log.d("ExchangeRateRepositoryImpl", "forceRefresh: $forceRefresh")
-            Log.d("ExchangeRateRepositoryImpl", "currency map: $currencyMapping")
-            Log.d("ExchangeRateRepositoryImpl", "caches: $cacheRates")
+        Log.d("ExchangeRateRepositoryImpl", "forceRefresh: $forceRefresh")
+        Log.d("ExchangeRateRepositoryImpl", "currency map: $currencyMapping")
+        Log.d("ExchangeRateRepositoryImpl", "caches: $cacheRates")
 
-            if (shouldRefresh) {
-                Log.d("ExchangeRateRepositoryImpl", "baseCurrency: $baseCurrency")
-                val response =
-                    api.getExchangeRates(
-                        apiKey = API_KEY,
-                        currencies = "",
-                        source = baseCurrency.ifBlank { "USD" })
-                Log.d("ExchangeRateRepositoryImpl", "API response: $response")
-                if (response.success && response.rates != null){
-                    val rates = response.rates?.mapNotNull { (key, value) ->
-                        val currencyCode = key.removePrefix(baseCurrency)
-                        val currencyInfo = currencyMapping?.get(currencyCode) ?: return@mapNotNull null
-                        // if api currency code exist in the fav currency table
-                        val isFavorite = currencyCode in favoriteCurrencies
-
-                        ExchangeRateEntity(
-                            currency = currencyCode,
-                            rate = value,
-                            timestamp = System.currentTimeMillis(),
-                            currencyName = currencyInfo.name,
-                            flagUrl = currencyInfo.flag ?: "",
-                            isFavourite = isFavorite
-                        )
-                    } ?: emptyList()
-                    currencyDao.clearRates()
-                    currencyDao.insertRates(rates)
-                    Log.d("ExchangeRateRepositoryImpl", "Inserted rates: $rates")
-                    Resource.Success(rates)
-                }else{
-                    Resource.Error("Something went wrong ,rate response ${response.rates}", null)
-                }
-
-            } else {
-                // for cached rate, update the favorite status
-                val ratesWithFavorites = cacheRates.map { rate ->
-                    rate.copy(isFavourite = rate.currency in favoriteCurrencies)
-                }
-                // Update the cache with current favorite status
-                currencyDao.clearRates()
-                currencyDao.insertRates(ratesWithFavorites)
-
-                Log.d(
-                    "ExchangeRateRepositoryImpl",
-                    "Using cache with updated favorites: $ratesWithFavorites"
-                )
-                Resource.Success(ratesWithFavorites)
+        if (shouldRefresh) {
+            Log.d("ExchangeRateRepositoryImpl", "baseCurrency: $baseCurrency")
+            val response = api.getExchangeRates(
+                apiKey = API_KEY,
+                currencies = "",
+                source = baseCurrency.ifBlank { "USD" }
+            )
+            Log.d("ExchangeRateRepositoryImpl", "API response: $response")
+            if (!response.success) {
+                val errorMessage = response.apiError?.errorMessage ?: "Unknown API error"
+                throw Exception(errorMessage)
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            Resource.Error(e.localizedMessage ?: "Unknown error", null)
+
+            val rates = response.rates?.mapNotNull { (key, value) ->
+                val currencyCode = key.removePrefix(baseCurrency)
+                val currencyInfo = currencyMapping?.get(currencyCode) ?: return@mapNotNull null
+                val isFavorite = currencyCode in favoriteCurrencies
+
+                ExchangeRateEntity(
+                    currency = currencyCode,
+                    rate = value,
+                    timestamp = System.currentTimeMillis(),
+                    currencyName = currencyInfo.name,
+                    flagUrl = currencyInfo.flag ?: "",
+                    isFavourite = isFavorite
+                )
+            } ?: emptyList()
+            currencyDao.clearRates()
+            currencyDao.insertRates(rates)
+            Log.d("ExchangeRateRepositoryImpl", "Inserted rates: $rates")
+            rates
+
+        } else {
+            val ratesWithFavorites =
+                cacheRates.map { rate -> rate.copy(isFavourite = rate.currency in favoriteCurrencies) }
+            currencyDao.clearRates()
+            currencyDao.insertRates(ratesWithFavorites)
+            ratesWithFavorites
         }
     }
 
-    override suspend fun getSupportedCurrencies(): Resource<List<SupportedCurrencies>> {
-        return try {
-//            val currencyMapping: Map<String, CurrencyInfo>? = loadCurrencyMappings(context)
-//                ?.associateBy { it.code }
+    override suspend fun getSupportedCurrencies(): Resource<List<SupportedCurrencies>> =
+        safeApiCall {
             val cachedSupportedCurrencies = currencyDao.getSupportedCurrencies()
             Log.d(
                 "ExchangeRateRepositoryImpl",
-                "cachedSupportedCurrencies $cachedSupportedCurrencies"
+                "cachedSupportedCurrencies: $cachedSupportedCurrencies"
             )
-            Log.d("ExchangeRateRepositoryImpl", "currencyMapping >>$currencyMapping")
-            if (cachedSupportedCurrencies.isEmpty()) {
-                val response = api.getSupportedCurrencies(apiKey = API_KEY)
-                Log.d("ExchangeRateRepositoryImpl", "resp >>$response")
-                if (response.success && response.currencies != null) {
-                    val supportedCurrencies = response.currencies.mapNotNull { (key, value) ->
-                        val currencyInfo = currencyMapping?.get(key) ?: return@mapNotNull null
-                        SupportedCurrencies(
-                            currencyCode = key,
-                            currencyName = value,
-                            flag = currencyInfo.flag ?: ""
-                        )
-                    }
-                    Log.d(
-                        "ExchangeRateRepositoryImpl",
-                        "supportedCurrencies >>$supportedCurrencies"
-                    )
-                    currencyDao.clearCurrencies()
-                    currencyDao.insertCurrencies(supportedCurrencies)
-                    Log.d("ExchangeRateRepositoryImpl", "calling api $supportedCurrencies")
-                    Resource.Success(supportedCurrencies)
-                } else {
-                    Resource.Error("Something went wrong, supportedCurrency ${response.currencies}", null)
-                }
+            Log.d("ExchangeRateRepositoryImpl", "currencyMapping: $currencyMapping")
 
-            } else {
-                Resource.Success(cachedSupportedCurrencies)
+            cachedSupportedCurrencies.ifEmpty {
+                val response = api.getSupportedCurrencies(apiKey = API_KEY)
+                Log.d("ExchangeRateRepositoryImpl", "API response: $response")
+
+                if (!response.success) {
+                    val errorMessage = response.apiError?.errorMessage ?: "Unknown API error"
+                    throw Exception(errorMessage)
+                }
+                val supportedCurrencies = response.currencies?.mapNotNull { (key, value) ->
+                    val currencyInfo = currencyMapping?.get(key) ?: return@mapNotNull null
+                    SupportedCurrencies(
+                        currencyCode = key,
+                        currencyName = value,
+                        flag = currencyInfo.flag ?: ""
+                    )
+                } ?: emptyList()
+
+                currencyDao.clearCurrencies()
+                currencyDao.insertCurrencies(supportedCurrencies)
+                supportedCurrencies
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            Resource.Error(e.localizedMessage ?: "Unknown error", null)
         }
-    }
 
     override suspend fun toggleFavoriteStatus(
         currencyCode: String,
@@ -175,9 +151,5 @@ class ExchangeRateRepositoryImpl @Inject constructor(
             e.printStackTrace()
             Resource.Error(e.localizedMessage ?: "Failed to initialize default favorites", false)
         }
-    }
-
-    override suspend fun isFirstRun(): Boolean {
-        return preferencesHelper.isFirstRun()
     }
 }

@@ -10,6 +10,7 @@ import com.chicohan.currencyexchange.R
 import com.chicohan.currencyexchange.data.api.CurrencyApi
 import com.chicohan.currencyexchange.data.db.dao.ExchangeRateDao
 import com.chicohan.currencyexchange.data.db.database.ExchangeRateDatabase
+import com.chicohan.currencyexchange.data.network.RemoteDataSource
 import com.chicohan.currencyexchange.data.repository.ExchangeRateRepository
 import com.chicohan.currencyexchange.data.repository.ExchangeRateRepositoryImpl
 import com.chicohan.currencyexchange.helper.Constants.BASE_URL
@@ -52,19 +53,11 @@ object AppModule {
     }
 
     @Provides
-    @Singleton
-    fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit = Retrofit.Builder()
-        .baseUrl(BASE_URL)
-        .client(okHttpClient)
-        .addConverterFactory(GsonConverterFactory.create())
-        .build()
-
-
-
-    @Provides
-    @Singleton
-    fun provideCurrencyApi(retrofit: Retrofit): CurrencyApi =
-        retrofit.create(CurrencyApi::class.java)
+    fun provideCurrencyApi(
+        remoteDataSource: RemoteDataSource
+    ): CurrencyApi {
+        return remoteDataSource.buildCurrencyApi(CurrencyApi::class.java)
+    }
 
     @Provides
     @Singleton
@@ -107,12 +100,10 @@ object AppModule {
     ) = Glide.with(context).setDefaultRequestOptions(
         RequestOptions()
             .placeholder(R.drawable.ic_launcher_background)
-            //  .error(R.drawable.baseline_running_with_errors_24)
             .diskCacheStrategy(DiskCacheStrategy.DATA)
     )
 
     @Provides
     fun provideDefaultDispatcher(): CoroutineDispatcher = Dispatchers.Default
-
 
 }

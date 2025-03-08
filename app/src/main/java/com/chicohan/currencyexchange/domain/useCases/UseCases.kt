@@ -1,4 +1,4 @@
-package com.chicohan.currencyexchange.domain
+package com.chicohan.currencyexchange.domain.useCases
 
 import javax.inject.Inject
 

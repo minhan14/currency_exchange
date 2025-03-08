@@ -1,6 +1,5 @@
-package com.chicohan.currencyexchange.domain
+package com.chicohan.currencyexchange.domain.useCases
 
-import com.chicohan.currencyexchange.data.db.entity.ExchangeRateEntity
 import com.chicohan.currencyexchange.data.db.entity.SupportedCurrencies
 import com.chicohan.currencyexchange.data.repository.ExchangeRateRepository
 import com.chicohan.currencyexchange.domain.model.Resource

@@ -5,13 +5,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.chicohan.currencyexchange.data.db.entity.ExchangeRateEntity
 import com.chicohan.currencyexchange.data.db.entity.SupportedCurrencies
-import com.chicohan.currencyexchange.domain.Event
-import com.chicohan.currencyexchange.domain.UseCases
+import com.chicohan.currencyexchange.domain.model.Event
+import com.chicohan.currencyexchange.domain.useCases.UseCases
 import com.chicohan.currencyexchange.domain.model.Resource
 import com.chicohan.currencyexchange.domain.model.UIState
 import com.chicohan.currencyexchange.helper.PreferencesHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -160,10 +161,16 @@ class CurrencyViewModel @Inject constructor(
                 initializeDefaultFavorites()
                 preferencesHelper.setFirstRunCompleted()
             }
+            loadSupportedCurrencies().join()
+            /*
+            -need to call sequential to avoid rate limitation else it will throw You have exceeded the maximum rate limitation allowed on your subscription plan.
+            -wait one sec
+            */
+            delay(1000L)
+            fetchExchangeRates(false)
         }
 
-        loadSupportedCurrencies()
-        fetchExchangeRates(false)
+
     }
 
     private fun initializeDefaultFavorites() =
@@ -248,19 +255,6 @@ class CurrencyViewModel @Inject constructor(
             fetchExchangeRates(false)
         }
     }
-    //reactive state for selected currency to be load in the image view , this is error prone cu
-//    val selectedSupportedCurrency: StateFlow<SupportedCurrencies?> =
-//        combine(_supportedCurrencies, _baseCurrency) { currencies, base ->
-//
-//            currencies.find { it.currencyCode == base }?.let {
-//                SupportedCurrencies(
-//                    currencyCode = it.currencyCode,
-//                    currencyName = it.currencyName,
-//                    flag = it.flag
-//                )
-//            }
-//        }.stateIn(viewModelScope, SharingStarted.Lazily, null)
-
 }
 
 data class CurrencyListUiState(

@@ -1,4 +1,4 @@
-package com.chicohan.currencyexchange.domain
+package com.chicohan.currencyexchange.domain.useCases
 
 import com.chicohan.currencyexchange.data.repository.ExchangeRateRepository
 import com.chicohan.currencyexchange.domain.model.Resource

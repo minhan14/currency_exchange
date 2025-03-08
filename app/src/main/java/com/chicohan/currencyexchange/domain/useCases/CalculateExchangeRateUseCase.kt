@@ -1,4 +1,4 @@
-package com.chicohan.currencyexchange.domain
+package com.chicohan.currencyexchange.domain.useCases
 
 import com.chicohan.currencyexchange.data.db.entity.ExchangeRateEntity
 import java.math.BigDecimal
@@ -11,7 +11,6 @@ class CalculateExchangeRateUseCase @Inject constructor() {
         amount: Double
     ): List<ExchangeRateEntity> {
         val amountBigDecimal = BigDecimal.valueOf(amount)
-
         return rates?.map { rate ->
             rate.copy(rate = rate.convertAmount(amountBigDecimal))
         } ?: emptyList()

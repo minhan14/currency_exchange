@@ -1,4 +1,4 @@
-package com.chicohan.currencyexchange.domain
+package com.chicohan.currencyexchange.domain.model
 
 open class Event<out T>(private val data: T) {
     var hasBeenHandled = false
