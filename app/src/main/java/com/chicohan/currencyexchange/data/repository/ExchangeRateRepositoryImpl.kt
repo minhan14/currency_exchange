@@ -13,6 +13,11 @@ import com.chicohan.currencyexchange.domain.model.Resource
 import com.chicohan.currencyexchange.helper.Constants.API_KEY
 import com.chicohan.currencyexchange.helper.PreferencesHelper
 import com.chicohan.currencyexchange.helper.loadCurrencyMappings
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOn
 import javax.inject.Inject
 
 class ExchangeRateRepositoryImpl @Inject constructor(
@@ -27,60 +32,34 @@ class ExchangeRateRepositoryImpl @Inject constructor(
     }
     private val defaultFavoriteCurrencies = listOf("USD", "EUR", "AUD", "JPY", "MMK")
 
-    override suspend fun getExchangeRates(
-        forceRefresh: Boolean,
-        baseCurrency: String
-    ): Resource<List<ExchangeRateEntity>> = safeApiCall {
-        val favoriteCurrencies = currencyDao.getFavoriteCurrencies().map { it.currencyCode }
-
-        val cacheRates = currencyDao.getCurrencyRates()
-        val shouldRefresh =
-            forceRefresh || cacheRates.isEmpty() || (System.currentTimeMillis() - cacheRates.first().timestamp > 30 * 60 * 1000) // for quota and testing set 24 hour //only refresh when it is over 30 mins
-
-        Log.d("ExchangeRateRepositoryImpl", "forceRefresh: $forceRefresh")
-        Log.d("ExchangeRateRepositoryImpl", "currency map: $currencyMapping")
-        Log.d("ExchangeRateRepositoryImpl", "caches: $cacheRates")
-
-        if (shouldRefresh) {
-            Log.d("ExchangeRateRepositoryImpl", "baseCurrency: $baseCurrency")
+    override suspend fun fetchExchangeRates(baseCurrency: String): Resource<List<ExchangeRateEntity>> =
+        safeApiCall {
+            Log.d("ExchangeRateRepositoryImpl", "fetching api")
             val response = api.getExchangeRates(
                 apiKey = API_KEY,
                 currencies = "",
-                source = baseCurrency.ifBlank { "USD" }
-            )
+                source = baseCurrency.ifBlank { "USD" })
             Log.d("ExchangeRateRepositoryImpl", "API response: $response")
             if (!response.success) {
                 val errorMessage = response.apiError?.errorMessage ?: "Unknown API error"
                 throw Exception(errorMessage)
             }
-
             val rates = response.rates?.mapNotNull { (key, value) ->
                 val currencyCode = key.removePrefix(baseCurrency)
                 val currencyInfo = currencyMapping?.get(currencyCode) ?: return@mapNotNull null
-                val isFavorite = currencyCode in favoriteCurrencies
-
                 ExchangeRateEntity(
                     currency = currencyCode,
                     rate = value,
                     timestamp = System.currentTimeMillis(),
                     currencyName = currencyInfo.name,
                     flagUrl = currencyInfo.flag ?: "",
-                    isFavourite = isFavorite
+                    isFavourite = false
                 )
             } ?: emptyList()
-            currencyDao.clearRates()
-            currencyDao.insertRates(rates)
+            currencyDao.apply { clearRates();insertRates(rates) }
             Log.d("ExchangeRateRepositoryImpl", "Inserted rates: $rates")
             rates
-
-        } else {
-            val ratesWithFavorites =
-                cacheRates.map { rate -> rate.copy(isFavourite = rate.currency in favoriteCurrencies) }
-            currencyDao.clearRates()
-            currencyDao.insertRates(ratesWithFavorites)
-            ratesWithFavorites
         }
-    }
 
     override suspend fun getSupportedCurrencies(): Resource<List<SupportedCurrencies>> =
         safeApiCall {
@@ -107,35 +86,20 @@ class ExchangeRateRepositoryImpl @Inject constructor(
                         flag = currencyInfo.flag ?: ""
                     )
                 } ?: emptyList()
-
-                currencyDao.clearCurrencies()
-                currencyDao.insertCurrencies(supportedCurrencies)
+                currencyDao.apply { clearCurrencies();insertCurrencies(supportedCurrencies) }
                 supportedCurrencies
             }
         }
 
-    override suspend fun toggleFavoriteStatus(
-        currencyCode: String,
-        isFavorite: Boolean
-    ): Resource<Boolean> {
-        return try {
-            // add or remove to fav table
-            if (isFavorite) {
-                currencyDao.addFavoriteCurrency(FavoriteCurrency(currencyCode))
-            } else {
-                currencyDao.removeFavoriteCurrency(currencyCode)
-            }
-            // Update the rate table with the current fav rate
-            val rates = currencyDao.getCurrencyRates()
-            val updatedRates = rates.map { rate ->
-                if (rate.currency == currencyCode) {
-                    rate.copy(isFavourite = isFavorite)
+    override suspend fun toggleFavoriteStatus(currencyCode: String, isFavorite: Boolean): Resource<Boolean> {
+        return try { currencyDao.apply {
+                if (isFavorite) {
+                    addFavoriteCurrency(FavoriteCurrency(currencyCode))
                 } else {
-                    rate
+                    removeFavoriteCurrency(currencyCode)
                 }
+                updateFavoriteStatus(currencyCode, isFavorite)
             }
-            currencyDao.clearRates()
-            currencyDao.insertRates(updatedRates)
             Resource.Success(true)
         } catch (e: Exception) {
             e.printStackTrace()
@@ -151,5 +115,25 @@ class ExchangeRateRepositoryImpl @Inject constructor(
             e.printStackTrace()
             Resource.Error(e.localizedMessage ?: "Failed to initialize default favorites", false)
         }
+    }
+
+    // single calling
+    override suspend fun getCachedExchangedRates(): List<ExchangeRateEntity> = currencyDao.getCurrencyRates()
+
+    /**
+     *  watch for the exchange_rates table and favorite_currencies table
+     *  get the favourite currency from exchange rates table
+     *  filter the exchange rates with user selected currency
+     */
+    override fun getCachedFavouriteExchangeRateStream(): Flow<List<ExchangeRateEntity>> {
+        return combine(currencyDao.getCurrencyRatesStream(), currencyDao.getFavoriteCurrenciesStream()) { rates, fav ->
+            val favorites = fav.map { it.currencyCode }.toSet()
+            rates.filter { it.currency in favorites }
+        }.flowOn(Dispatchers.IO)
+    }
+
+    override fun shouldRefresh(rates: List<ExchangeRateEntity>): Boolean {
+        val lastUpdated = rates.firstOrNull()?.timestamp ?: 0L
+        return (System.currentTimeMillis() - lastUpdated) > 12 * 60 * 60 * 1000
     }
 }

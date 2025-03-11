@@ -13,7 +13,6 @@ import com.chicohan.currencyexchange.data.db.database.ExchangeRateDatabase
 import com.chicohan.currencyexchange.data.network.RemoteDataSource
 import com.chicohan.currencyexchange.data.repository.ExchangeRateRepository
 import com.chicohan.currencyexchange.data.repository.ExchangeRateRepositoryImpl
-import com.chicohan.currencyexchange.helper.Constants.BASE_URL
 import com.chicohan.currencyexchange.helper.PreferencesHelper
 import com.chuckerteam.chucker.api.ChuckerCollector
 import com.chuckerteam.chucker.api.ChuckerInterceptor
@@ -25,8 +24,6 @@ import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import okhttp3.OkHttpClient
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Singleton
 
 @Module

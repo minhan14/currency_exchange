@@ -16,6 +16,9 @@ interface ExchangeRateDao {
     @Query("SELECT * FROM exchange_rates")
     suspend fun getCurrencyRates(): List<ExchangeRateEntity>
 
+    @Query("SELECT * FROM exchange_rates")
+    fun getCurrencyRatesStream(): Flow<List<ExchangeRateEntity>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertRates(rates: List<ExchangeRateEntity>)
 
@@ -32,7 +35,7 @@ interface ExchangeRateDao {
     suspend fun clearCurrencies()
 
     @Query("SELECT * FROM favorite_currencies")
-    suspend fun getFavoriteCurrencies(): List<FavoriteCurrency>
+    fun getFavoriteCurrenciesStream(): Flow<List<FavoriteCurrency>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun addFavoriteCurrency(favoriteCurrency: FavoriteCurrency)
@@ -43,17 +46,6 @@ interface ExchangeRateDao {
     @Query("SELECT EXISTS(SELECT 1 FROM favorite_currencies WHERE currencyCode = :currencyCode LIMIT 1)")
     suspend fun isCurrencyFavorite(currencyCode: String): Boolean
 
-
-    @Transaction
-    suspend fun getExchangeRatesWithFavoriteStatus(): List<ExchangeRateEntity> {
-        val rates = getCurrencyRates()
-        val favorites = getFavoriteCurrencies().map { it.currencyCode }
-        
-        return rates.map { rate ->
-            rate.copy(isFavourite = rate.currency in favorites)
-        }
-    }
-    
     @Transaction
     suspend fun initializeDefaultFavorites(defaultCurrencies: List<String>) {
         for (currencyCode in defaultCurrencies) {

@@ -18,7 +18,8 @@ class GetExchangeRateUseCase @Inject constructor(
         baseCurrency: String
     ): Resource<List<ExchangeRateEntity>> = withContext(scope) {
         return@withContext try {
-            repository.getExchangeRates(forceRefresh = forceRefresh, baseCurrency = baseCurrency)
+            Resource.Error("", data = null)
+          //  repository.getExchangeRates(forceRefresh = forceRefresh, baseCurrency = baseCurrency)
         } catch (e: Throwable) {
             e.printStackTrace()
             Resource.Error(e.message.toString(), data = null)

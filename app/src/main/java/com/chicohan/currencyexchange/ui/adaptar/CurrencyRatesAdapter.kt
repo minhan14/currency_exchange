@@ -10,16 +10,28 @@ import com.chicohan.currencyexchange.data.db.entity.ExchangeRateEntity
 import com.chicohan.currencyexchange.databinding.ItemCurrencyBinding
 import java.text.DecimalFormat
 
-class CurrencyRatesAdapter(private val glide:RequestManager, private val onMoreClickCallback: ((item: ExchangeRateEntity) -> Unit)? = null) :
+class CurrencyRatesAdapter(
+    private val glide: RequestManager,
+    private val onMoreClickCallback: ((item: ExchangeRateEntity) -> Unit)? = null,
+    private val onLongClick: ((item: ExchangeRateEntity) -> Boolean)
+) :
     ListAdapter<ExchangeRateEntity, CurrencyRatesAdapter.MyListItemViewHolder>(
         ListDiffCallBack()
     ) {
     private val formatter = DecimalFormat("#,###.######")
+
     class ListDiffCallBack : DiffUtil.ItemCallback<ExchangeRateEntity>() {
-        override fun areItemsTheSame(oldItem: ExchangeRateEntity, newItem: ExchangeRateEntity): Boolean {
+        override fun areItemsTheSame(
+            oldItem: ExchangeRateEntity,
+            newItem: ExchangeRateEntity
+        ): Boolean {
             return oldItem.currency == newItem.currency
         }
-        override fun areContentsTheSame(oldItem: ExchangeRateEntity, newItem: ExchangeRateEntity): Boolean {
+
+        override fun areContentsTheSame(
+            oldItem: ExchangeRateEntity,
+            newItem: ExchangeRateEntity
+        ): Boolean {
             return oldItem == newItem
         }
     }
@@ -39,6 +51,9 @@ class CurrencyRatesAdapter(private val glide:RequestManager, private val onMoreC
             val currencyItm = getItem(position)
             root.setOnClickListener {
                 onMoreClickCallback?.invoke(currencyItm)
+            }
+            root.setOnLongClickListener {
+                onLongClick.invoke(currencyItm)
             }
             tvCurrencyCode.text = currencyItm.currency
             tvExchangeRate.text = formatter.format(currencyItm.rate)

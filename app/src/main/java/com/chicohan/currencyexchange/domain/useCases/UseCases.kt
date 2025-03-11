@@ -7,5 +7,6 @@ data class UseCases @Inject constructor(
     val calculateExchangeRateUseCase: CalculateExchangeRateUseCase,
     val getSupportedCurrenciesUseCase: GetSupportedCurrenciesUseCase,
     val getToggleFavoriteUseCase: ToggleFavoriteUseCase,
-    val initializeDefaultFavoritesUseCase: InitializeDefaultFavoritesUseCase
+    val initializeDefaultFavoritesUseCase: InitializeDefaultFavoritesUseCase,
+    val refreshCurrenciesUseCase: FetchExchangeRateUseCase
 )

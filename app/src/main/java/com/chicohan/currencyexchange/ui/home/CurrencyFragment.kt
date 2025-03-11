@@ -10,7 +10,6 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.SimpleItemAnimator
 import com.bumptech.glide.RequestManager
 import com.chicohan.currencyexchange.R
 import com.chicohan.currencyexchange.data.db.entity.ExchangeRateEntity
@@ -46,10 +45,16 @@ class CurrencyFragment : Fragment(R.layout.fragment_currency) {
     lateinit var glide: RequestManager
 
     private val currencyRatesAdapter by lazy {
-        CurrencyRatesAdapter(glide) { item: ExchangeRateEntity ->
-            print(item)
-            handleNavigationToDetail(item)
-        }
+        CurrencyRatesAdapter(glide,
+            onMoreClickCallback = { item -> handleNavigationToDetail(item) },
+            onLongClick = { item ->
+                handleDelete(item)
+                true
+            })
+    }
+
+    private fun handleDelete(item: ExchangeRateEntity) {
+        currencyViewModel.toggleFavorite(currencyCode = item.currency, isFavorite = false)
     }
 
     private val dialogSupportedCurrencies by lazy {
@@ -85,8 +90,8 @@ class CurrencyFragment : Fragment(R.layout.fragment_currency) {
 
         rvCurrency.apply {
             layoutManager = LinearLayoutManager(requireContext())
-            isNestedScrollingEnabled = false
-            itemAnimator = null
+//            isNestedScrollingEnabled = false
+//            itemAnimator = null
             adapter = currencyRatesAdapter
         }
 
@@ -145,7 +150,7 @@ class CurrencyFragment : Fragment(R.layout.fragment_currency) {
                         "Dismiss"
                     ) {
                         if (it) {
-                            currencyViewModel.fetchExchangeRates(true)
+                            currencyViewModel.fetchExchangeRates()
                             println("retry")
                         }
                     }

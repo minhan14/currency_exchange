@@ -15,5 +15,4 @@ class GetSupportedCurrenciesUseCase @Inject constructor(
     suspend operator fun invoke(): Resource<List<SupportedCurrencies>> = withContext(scope){
         repository.getSupportedCurrencies()
     }
-
 }

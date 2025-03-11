@@ -16,7 +16,7 @@ import com.chicohan.currencyexchange.data.db.entity.SupportedCurrencies
         SupportedCurrencies::class,
         FavoriteCurrency::class
     ], 
-    version = 7
+    version = 9
 )
 @TypeConverters(BigDecimalConverter::class)
 abstract class ExchangeRateDatabase : RoomDatabase() {

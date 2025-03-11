@@ -28,4 +28,7 @@ class PreferencesHelper @Inject constructor(private val sharedPreferences: Share
     fun setFirstRunCompleted() {
         sharedPreferences.edit().putBoolean("is_first_run", false).apply()
     }
+    fun clean() {
+        sharedPreferences.edit().clear().apply()
+    }
 }
