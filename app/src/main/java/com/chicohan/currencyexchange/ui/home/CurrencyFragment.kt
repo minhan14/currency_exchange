@@ -124,7 +124,6 @@ class CurrencyFragment : Fragment(R.layout.fragment_currency) {
                 glide.load(state.result.flag).into(btnCurrency)
                 textViewCurrency.text = state.result.currencyCode
             }
-
             is UIState.Error -> requireContext().toast(state.errorMessage)
         }
     }

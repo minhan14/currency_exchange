@@ -13,7 +13,6 @@ import com.chicohan.currencyexchange.data.db.database.ExchangeRateDatabase
 import com.chicohan.currencyexchange.data.network.RemoteDataSource
 import com.chicohan.currencyexchange.data.repository.ExchangeRateRepository
 import com.chicohan.currencyexchange.data.repository.ExchangeRateRepositoryImpl
-import com.chicohan.currencyexchange.helper.PreferencesHelper
 import com.chuckerteam.chucker.api.ChuckerCollector
 import com.chuckerteam.chucker.api.ChuckerInterceptor
 import dagger.Module
@@ -72,14 +71,12 @@ object AppModule {
     fun provideExcRateRepository(
         dao: ExchangeRateDao,
         api: CurrencyApi,
-        @ApplicationContext context: Context,
-        preferencesHelper: PreferencesHelper
+        @ApplicationContext context: Context
     ): ExchangeRateRepository {
         return ExchangeRateRepositoryImpl(
             api = api,
             currencyDao = dao,
-            context = context,
-            preferencesHelper = preferencesHelper
+            context = context
 
         )
     }

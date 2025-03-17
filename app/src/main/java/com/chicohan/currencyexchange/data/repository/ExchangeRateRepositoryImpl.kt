@@ -11,10 +11,8 @@ import com.chicohan.currencyexchange.data.model.CurrencyInfo
 import com.chicohan.currencyexchange.data.network.SafeApiCall
 import com.chicohan.currencyexchange.domain.model.Resource
 import com.chicohan.currencyexchange.helper.Constants.API_KEY
-import com.chicohan.currencyexchange.helper.PreferencesHelper
 import com.chicohan.currencyexchange.helper.loadCurrencyMappings
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOn
@@ -23,8 +21,7 @@ import javax.inject.Inject
 class ExchangeRateRepositoryImpl @Inject constructor(
     private val api: CurrencyApi,
     private val currencyDao: ExchangeRateDao,
-    private val context: Context,
-    private val preferencesHelper: PreferencesHelper
+    private val context: Context
 ) : ExchangeRateRepository, SafeApiCall {
 
     private val currencyMapping: Map<String, CurrencyInfo>? by lazy {

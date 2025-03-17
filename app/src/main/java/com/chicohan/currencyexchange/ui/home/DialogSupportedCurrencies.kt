@@ -68,9 +68,6 @@ class DialogSupportedCurrencies(private val mode: CurrencyDialogMode) : DialogFr
         super.onViewCreated(view, savedInstanceState)
         setupDialogSize()
         initViews()
-        collectFlowWithLifeCycleAtStateStart(currencyViewModel.supportedCurrencies) {
-            currencyAdapter.submitList(it)
-        }
         collectFlowWithLifeCycleAtStateStart(currencyViewModel.filteredCurrencies) { currencies ->
             currencyAdapter.submitList(currencies)
         }

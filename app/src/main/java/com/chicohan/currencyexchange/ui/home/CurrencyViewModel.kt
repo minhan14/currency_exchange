@@ -50,7 +50,7 @@ class CurrencyViewModel @Inject constructor(
                 val rates = repository.getCachedExchangedRates() // get the one time exchange list
                 if (rates.isEmpty()){
                     Log.d("CurrencyViewModel","delayed for first time")
-                    delay(2000L)
+                    delay(3000L)
                 }
                 if (rates.isEmpty() || repository.shouldRefresh(rates)) { // refresh if rate is empty or 30 minutes is up
                     fetchExchangeRates()
@@ -65,14 +65,14 @@ class CurrencyViewModel @Inject constructor(
 
 
     private val _supportedCurrencies = MutableStateFlow<List<SupportedCurrencies>>(emptyList())
-    val supportedCurrencies: StateFlow<List<SupportedCurrencies>> =
+    private val supportedCurrencies: StateFlow<List<SupportedCurrencies>> =
         _supportedCurrencies.asStateFlow()
 
     private var currencySearchQuery = MutableStateFlow("")
 
     @OptIn(FlowPreview::class)
     val filteredCurrencies: StateFlow<List<SupportedCurrencies>> =
-        combine(supportedCurrencies, currencySearchQuery.debounce(300).distinctUntilChanged())
+        combine(supportedCurrencies, currencySearchQuery.debounce(200).distinctUntilChanged())
         //debounce to avoid filtering on every keystroke, and distinctUntilChanged only trigger filtering when the query actually changes
         { currencies, query ->
             if (query.isBlank()) {
@@ -90,7 +90,6 @@ class CurrencyViewModel @Inject constructor(
     private val _baseCurrencyState = MutableStateFlow<UIState<String>>(
         UIState.Success(preferencesHelper.getBaseCurrency() ?: "USD")
     )
-
     // value for internal use
     private val baseCurrency: StateFlow<String> = _baseCurrencyState
         .map { state ->
@@ -179,10 +178,7 @@ class CurrencyViewModel @Inject constructor(
 
     }
 
-    private fun initializeDefaultFavorites() =
-        viewModelScope.launch {
-            Log.d("CurrencyViewModel","initializeDefaultFavoritesUseCase")
-            useCases.initializeDefaultFavoritesUseCase() }
+    private fun initializeDefaultFavorites() = viewModelScope.launch { Log.d("CurrencyViewModel","initializeDefaultFavoritesUseCase");useCases.initializeDefaultFavoritesUseCase() }
 
     fun updateAmount(newAmount: Double) {
         if (_amount.value == newAmount) return
@@ -201,7 +197,7 @@ class CurrencyViewModel @Inject constructor(
 
         when (val res = useCases.getSupportedCurrenciesUseCase.invoke()) {
             is Resource.Success -> res.data?.let {data->
-                _supportedCurrencies.value = data
+                _supportedCurrencies.update { data }
             }
 
             is Resource.Error -> _fetchRateState.update {
@@ -234,7 +230,7 @@ class CurrencyViewModel @Inject constructor(
 
             is Resource.Error -> {
                 _fetchRateState.update { Resource.Error(result.message, null) }
-                _baseCurrencyState.update { UIState.Error(result.message) }
+                _baseCurrencyState.update { UIState.Success(baseCurrency.value) } // update with the last value 
             }
 
             else -> Unit
