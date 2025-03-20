@@ -1,3 +1,7 @@
+import java.io.FileInputStream
+import java.util.Properties
+
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -20,6 +24,12 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        val properties = Properties()
+        val localPropertiesFile = project.rootProject.file("local.properties")
+        if (localPropertiesFile.exists()) {
+            properties.load(FileInputStream(localPropertiesFile))
+        }
+        buildConfigField("String", "API_KEY", "\"${properties.getProperty("API_KEY")}\"")
     }
 
     buildTypes {
@@ -40,6 +50,7 @@ android {
     }
     buildFeatures {
         viewBinding = true
+        buildConfig = true
     }
 
 }
@@ -62,7 +73,7 @@ dependencies {
     implementation(libs.androidx.room.runtime)
 //    implementation(libs.javapoet)
     ksp(libs.androidx.room.compiler)
-    implementation (libs.glide)
+    implementation(libs.glide)
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
     implementation(libs.androidx.core.splashscreen)

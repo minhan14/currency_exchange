@@ -2,6 +2,7 @@ package com.chicohan.currencyexchange.data.repository
 
 import android.content.Context
 import android.util.Log
+import com.chicohan.currencyexchange.BuildConfig
 import com.chicohan.currencyexchange.data.api.CurrencyApi
 import com.chicohan.currencyexchange.data.db.dao.ExchangeRateDao
 import com.chicohan.currencyexchange.data.db.entity.ExchangeRateEntity
@@ -10,7 +11,6 @@ import com.chicohan.currencyexchange.data.db.entity.SupportedCurrencies
 import com.chicohan.currencyexchange.data.model.CurrencyInfo
 import com.chicohan.currencyexchange.data.network.SafeApiCall
 import com.chicohan.currencyexchange.domain.model.Resource
-import com.chicohan.currencyexchange.helper.Constants.API_KEY
 import com.chicohan.currencyexchange.helper.loadCurrencyMappings
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -29,11 +29,13 @@ class ExchangeRateRepositoryImpl @Inject constructor(
     }
     private val defaultFavoriteCurrencies = listOf("USD", "EUR", "AUD", "JPY", "MMK")
 
+    private val apiKey = BuildConfig.API_KEY
+
     override suspend fun fetchExchangeRates(baseCurrency: String): Resource<List<ExchangeRateEntity>> =
         safeApiCall {
             Log.d("ExchangeRateRepositoryImpl", "fetching api")
             val response = api.getExchangeRates(
-                apiKey = API_KEY,
+                apiKey = apiKey,
                 currencies = "",
                 source = baseCurrency.ifBlank { "USD" })
             Log.d("ExchangeRateRepositoryImpl", "API response: $response")
@@ -68,7 +70,7 @@ class ExchangeRateRepositoryImpl @Inject constructor(
             Log.d("ExchangeRateRepositoryImpl", "currencyMapping: $currencyMapping")
 
             cachedSupportedCurrencies.ifEmpty {
-                val response = api.getSupportedCurrencies(apiKey = API_KEY)
+                val response = api.getSupportedCurrencies(apiKey = apiKey)
                 Log.d("ExchangeRateRepositoryImpl", "API response: $response")
 
                 if (!response.success) {
@@ -88,8 +90,12 @@ class ExchangeRateRepositoryImpl @Inject constructor(
             }
         }
 
-    override suspend fun toggleFavoriteStatus(currencyCode: String, isFavorite: Boolean): Resource<Boolean> {
-        return try { currencyDao.apply {
+    override suspend fun toggleFavoriteStatus(
+        currencyCode: String,
+        isFavorite: Boolean
+    ): Resource<Boolean> {
+        return try {
+            currencyDao.apply {
                 if (isFavorite) {
                     addFavoriteCurrency(FavoriteCurrency(currencyCode))
                 } else {
@@ -115,7 +121,8 @@ class ExchangeRateRepositoryImpl @Inject constructor(
     }
 
     // single calling
-    override suspend fun getCachedExchangedRates(): List<ExchangeRateEntity> = currencyDao.getCurrencyRates()
+    override suspend fun getCachedExchangedRates(): List<ExchangeRateEntity> =
+        currencyDao.getCurrencyRates()
 
     /**
      *  watch for the exchange_rates table and favorite_currencies table
@@ -123,7 +130,10 @@ class ExchangeRateRepositoryImpl @Inject constructor(
      *  filter the exchange rates with user selected currency
      */
     override fun getCachedFavouriteExchangeRateStream(): Flow<List<ExchangeRateEntity>> {
-        return combine(currencyDao.getCurrencyRatesStream(), currencyDao.getFavoriteCurrenciesStream()) { rates, fav ->
+        return combine(
+            currencyDao.getCurrencyRatesStream(),
+            currencyDao.getFavoriteCurrenciesStream()
+        ) { rates, fav ->
             val favorites = fav.map { it.currencyCode }.toSet()
             rates.filter { it.currency in favorites }
         }.flowOn(Dispatchers.IO)

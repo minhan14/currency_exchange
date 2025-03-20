@@ -11,3 +11,4 @@ data class DetailFragmentModel(
     val calculatedCurrency: String,
     val calculatedCurrencyAmount: BigDecimal
 ): Parcelable
+

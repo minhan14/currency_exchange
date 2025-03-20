@@ -24,6 +24,10 @@ jobs:
           java-version: '17'
           distribution: 'adopt'
 
+      - name: Create local.properties (for API Key)
+        run: |
+          echo "API_KEY=${{ secrets.API_KEY }}" > local.properties
+
       - name: Build with Gradle
         run: ./gradlew assembleDebug --no-daemon
 

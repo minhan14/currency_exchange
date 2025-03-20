@@ -182,19 +182,16 @@ class CurrencyViewModel @Inject constructor(
 
     fun updateAmount(newAmount: Double) {
         if (_amount.value == newAmount) return
-        _amount.update { newAmount }
-        preferencesHelper.saveAmount(newAmount)
+        _amount.update { newAmount };preferencesHelper.saveAmount(newAmount)
     }
 
     fun fetchExchangeRates() = viewModelScope.launch {
         Log.d("CurrencyViewModel","called fetchExchangeRates")
-        _fetchRateState.update { Resource.Loading(null) }
-        _fetchRateState.update { useCases.refreshCurrenciesUseCase(baseCurrency.value) }
+        _fetchRateState.update { Resource.Loading(null) };_fetchRateState.update { useCases.refreshCurrenciesUseCase(baseCurrency.value) }
     }
 
     private fun loadSupportedCurrencies() = viewModelScope.launch {
         Log.d("CurrencyViewModel","called loadSupportedCurrencies")
-
         when (val res = useCases.getSupportedCurrenciesUseCase.invoke()) {
             is Resource.Success -> res.data?.let {data->
                 _supportedCurrencies.update { data }
